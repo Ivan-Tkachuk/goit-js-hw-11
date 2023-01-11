@@ -9,7 +9,7 @@ const input = document.getElementById('search-box');
 const list = document.querySelector('.country-list');
 const info = document.querySelector('.country-info');
 
-console.log('hi');
+console.log('hello');
 
 input.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
 
