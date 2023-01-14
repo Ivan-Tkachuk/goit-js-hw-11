@@ -11,54 +11,90 @@ body {
   background-color: #fafafa;
   color: #212121;
   line-height: 1.5;
+  margin: 0;
+  position: relative;
 }
 
-#search-box {
-  font: inherit;
-  padding: 8px;
+img {
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #afeeee;
+  padding: 10px;
+}
+.search-form input {
+  height: 40;
+  width: 250;
+  margin: 0;
+  padding-left: 5;
+  border: none;
+  border-radius: 5px;
+}
+
+.search-form button {
+  position: relative;
+  left: -40;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  background-color: #40e0d0;
+  color: #111;
+  border: 1px solid #48d1cc;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  width: 40px;
+  height: 40px;
+}
+
+.gallery {
+  position: relative;
+  left: 50%;
+  transform: translate(-50%);
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 30px;
+  margin: 10;
+  padding: 0;
+}
+
+.photo-card {
   max-width: 320px;
-  margin-bottom: 16px;
+  flex-basis: calc((100% - 90px) / 4);
+  list-style: none;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25), 0px 4px 4px rgba(0, 0, 0, 0.06),
+    1px 4px 6px rgba(0, 0, 0, 0.16);
+  background-color: #f4f6f6;
 }
 
-.country-list {
-  padding: 0;
-}
-
-.country-list li {
+.info {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 5;
-}
-.country-list li p {
-  margin: 0;
+  gap: 5px;
+  text-align: center;
 }
 
-.country-info {
-  padding: 0;
+.load-more {
+  position: relative;
+  left: 50%;
+  transform: translate(-50%);
+  width: 150;
+  height: 30;
+  padding: 5;
+  margin: 10;
+  background-color: #40e0d0;
+  color: #111;
+  border-radius: 5px;
+  border: none;
+  text-align: center;
+  font-weight: bold;
 }
-
-.country-info ul {
-  padding: 0;
-}
-
-.country-info div {
-display: flex;
-align-items: center;
-gap: 10px;
-margin: 0;
-}
-
-.country-info div h2 {
-  margin: 0;
-}
-
-.country-info ul li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  }
-  .country-info ul li p, h3 {
-    margin: 0;
-  }

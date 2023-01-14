@@ -1,87 +1,183 @@
 import './css/styles.css';
 import Notiflix from 'notiflix';
-import debounce from 'lodash.debounce';
-import API from './fetchCountries';
+import axios from 'axios';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const DEBOUNCE_DELAY = 300;
+const KEY = '32771721-a281e265f6f888e53b408a54b';
+const BASE_URL = 'https://pixabay.com/api/';
+const itemsPerPage = 40;
 
-const input = document.getElementById('search-box');
-const list = document.querySelector('.country-list');
-const info = document.querySelector('.country-info');
+let page = 1;
+let searchItem;
+let total;
+let gallerySimpleLightbox;
 
-console.log('hello');
+const refs = {
+  searchForm: document.querySelector('.search-form'),
+  articlesContainer: document.querySelector('.gallery'),
+  // btnLoadMore: document.querySelector('.load-more'),
+  guard: document.querySelector('.js-guard'),
+};
 
-input.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
+refs.searchForm.addEventListener('submit', onSearch);
+// refs.btnLoadMore.addEventListener('click', onBtnLoad);
 
-function onInput(e) {
-  const inputName = e.target.value.trim();
-  if (!inputName) {
-    return;
+const observerOptions = {
+  root: null,
+  rootMargin: '200px',
+  threshold: 1.0,
+};
+
+async function ringsApi() {
+  const resp = await axios.get(
+    `${BASE_URL}?key=${KEY}&q=${searchItem}&image_type=photo&orientation=horizontal&safesearch=true&per_page=${itemsPerPage}&page=${page}`
+  );
+  return resp;
+}
+
+function onSearch(e) {
+  e.preventDefault();
+  removeList();
+  observer.unobserve(refs.guard);
+
+  // refs.btnLoadMore.hidden = true;
+  searchItem = e.currentTarget.elements.searchQuery.value;
+  page = 1;
+
+  onBtnCreateMarkup();
+}
+
+async function onBtnCreateMarkup() {
+  try {
+    const res = await ringsApi();
+    total = res.data.totalHits;
+    onSuccess();
+    createMarkup(res.data.hits);
+    observer.observe(refs.guard);
+    // if (res.data.totalHits > itemsPerPage) {
+    //   refs.btnLoadMore.hidden = false
+    // }
+    if (res.data.totalHits == 0) {
+      page = 1;
+      onError();
+      // refs.btnLoadMore.hidden = true;
+    }
+  } catch (err) {
+    console.log(err);
   }
-  API.fetchCountries(inputName)
-    .then(data => createMarkup(data))
-    .catch(onFetchError);
+}
+
+async function onLoad() {
+  try {
+    const res = await ringsApi(page);
+    gallerySimpleLightbox.destroy();
+    createMarkup(res.data.hits);
+    const totalPages = Math.ceil(res.data.totalHits / itemsPerPage);
+    // refs.btnLoadMore.hidden = false;
+    if (page > 1) {
+      smoothScroll();
+    }
+    if (page === totalPages) {
+      // refs.btnLoadMore.hidden = true;
+      onNoMorePicture();
+      observer.unobserve(refs.guard);
+    }
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 function createMarkup(arr) {
-  const markupList = arr.map(
-    ({ name: { official }, flags: { svg } }) =>
-      `<li>
-<img src="${svg}" alt="${official}" width="25px" height="15px">
-<p>${official}</p>
-</li>`
-  );
+  const markup = arr
+    .map(
+      ({
+        webformatURL,
+        largeImageURL,
+        tags,
+        likes,
+        views,
+        comments,
+        downloads,
+      }) =>
+        `<div class="photo-card">
+     <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}"  width="320" height="240" loading="lazy"/></a>
+     <div class="info">
+       <p class="info-item">
+         <b>Likes</b>
+         ${likes}
+       </p>
+       <p class="info-item">
+         <b>Views</b>
+         ${views}
+       </p>
+       <p class="info-item">
+         <b>Comments</b>
+         ${comments}
+       </p>
+       <p class="info-item">
+         <b>Downloads</b>
+         ${downloads}
+       </p>
+     </div>
+   </div>`
+    )
+    .join('');
 
-  const markupCountry = arr.map(
-    ({ name: { official }, flags: { svg }, capital, population, languages }) =>
-      `<div>
-<img src="${svg}" alt="${official}" width="40px" height="25px">
-<h2>${official}</h2>
-</div>
-<ul>
-<li><h3>Capital:</h3><p>${capital.join(', ')}</p></li>
-<li><h3>Population:</h3><p>${population}</p></li>
-<li><h3>Languages:</h3><p>${Object.values(languages).join(', ')}</p></li>
-</ul>`
-  );
+  refs.articlesContainer.insertAdjacentHTML('beforeend', markup);
 
-  if (markupList.length > 10) {
-    removeInfo();
-    removeList();
-    onToMuchResults();
-  }
-  if (markupList.length > 1 && markupList.length < 10) {
-    removeInfo();
-    list.innerHTML = markupList.join('');
-  }
-
-  if (markupList.length === 1) {
-    removeList();
-    info.innerHTML = markupCountry.join('');
-  }
+  gallerySimpleLightbox = new SimpleLightbox('.gallery a');
 }
 
-function removeInfo() {
-  while (info.firstChild) {
-    info.removeChild(info.firstChild);
-  }
-}
+// function onBtnLoad() {
+//   page += 1;
+//    refs.btnLoadMore.hidden = true;
+//    onLoad();
+// }
 
 function removeList() {
-  while (list.firstChild) {
-    list.removeChild(list.firstChild);
+  while (refs.articlesContainer.firstChild) {
+    refs.articlesContainer.removeChild(refs.articlesContainer.firstChild);
   }
 }
 
-function onFetchError(error) {
-  removeInfo();
+function onError(error) {
   removeList();
-
-  Notiflix.Notify.failure(`There is no country with that name`);
+  Notiflix.Notify.failure(
+    `Sorry, there are no images matching your search query. Please try again.`
+  );
 }
 
-function onToMuchResults(warning) {
+function onNoMorePicture(warning) {
   Notiflix.Notify.info(
-    'Too many matches found! Please enter a more specific name.'
+    "We're sorry, but you've reached the end of search results."
   );
+}
+
+function onSuccess(success) {
+  Notiflix.Notify.success(
+    `Hooray! We found ${total} images.`
+  );
+}
+
+
+function smoothScroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
+
+const observer = new IntersectionObserver(onInfinityLoad, observerOptions);
+function onInfinityLoad(entries, observer) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      page += 1;
+      onLoad();
+    }
+  });
 }
