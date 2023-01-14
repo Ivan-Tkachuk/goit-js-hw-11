@@ -58,6 +58,7 @@ async function onBtnCreateMarkup() {
       return
       // refs.btnLoadMore.hidden = true;
     }
+    
     onSuccess();
     createMarkup(res.data.hits);
     observer.observe(refs.guard);
