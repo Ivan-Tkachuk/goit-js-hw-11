@@ -52,17 +52,19 @@ async function onBtnCreateMarkup() {
   try {
     const res = await ringsApi();
     total = res.data.totalHits;
+    if (total == 0) {
+      page = 1;
+      onError();
+      return
+      // refs.btnLoadMore.hidden = true;
+    }
     onSuccess();
     createMarkup(res.data.hits);
     observer.observe(refs.guard);
     // if (res.data.totalHits > itemsPerPage) {
     //   refs.btnLoadMore.hidden = false
     // }
-    if (res.data.totalHits == 0) {
-      page = 1;
-      onError();
-      // refs.btnLoadMore.hidden = true;
-    }
+
   } catch (err) {
     console.log(err);
   }
